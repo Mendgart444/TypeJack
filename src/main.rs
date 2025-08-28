@@ -1,5 +1,8 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+mod parser;
+mod transliper;
+
 use std::{
     env, fs::File, io::Write, path::PathBuf, sync::Arc
 };
@@ -9,11 +12,6 @@ use swc_common::{
     errors::{ColorConfig, Handler},
     FileName, Globals, SourceMap, DUMMY_SP
 };
-use swc_ecma_ast::EsVersion;
-use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
-use swc_ecma_parser::{lexer::Lexer, StringInput, Syntax};
-use swc_ecma_transforms_typescript::strip;
-use swc_ecma_visit::FoldWith;
 
 fn main() {
     println!("TypeJack TS Framework");
