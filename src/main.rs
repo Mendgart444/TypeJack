@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
 use std::{
     env, fs::File, io::Write, path::PathBuf, sync::Arc
 };
