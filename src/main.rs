@@ -26,4 +26,11 @@ fn main() {
         .subcommand(Command::new("build").about("Build TypeScript files into JavaScript")) // Subcommand for building TS files
         // End of subcommands----------------------------------
         .get_matches();
+
+    if arg.subcommand_matches("build").is_some() {
+        println!("Building TypeScript files...");
+        // TS code for testing
+        let ts_code: &str = "let x: number = 1;";
+        let module = parser::parse(ts_code);
+    }
 }
