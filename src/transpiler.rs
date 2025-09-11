@@ -10,7 +10,7 @@ pub fn transpile_ts_to_js(module: Module) -> Result<String> {
     {
         let writer: Box<JsWriter<&mut Vec<u8>>> =
             Box::new(JsWriter::new(cm.clone(), "\n", &mut buf, None));
-        let mut emitter = Emitter {
+        let mut emitter: Emitter<'_, Box<JsWriter<'_, &mut Vec<u8>>>, SourceMap> = Emitter {
             cfg: Default::default(),
             comments: None,
             cm: cm.clone(),
@@ -19,6 +19,6 @@ pub fn transpile_ts_to_js(module: Module) -> Result<String> {
         emitter.emit_module(&module)?;
     }
 
-    let js_code = String::from_utf8(buf)?;
+    let js_code: String = String::from_utf8(buf)?;
     Ok(js_code)
 }

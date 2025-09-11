@@ -63,20 +63,26 @@ fn main() -> anyhow::Result<()> {
             // Load configuration
             let config: Config = load_config()?;
             println!("Project Name: {}", config.project.name);
+            // read source file
+            let source_code: String = fs::read_to_string(config.project.entry).expect("[error] no ts file found!");
+            // traspile it
+            let ast: Module = parser::parse_ts(&source_code)?;
+            let transpiled_js_code: String = transpiler::transpile_ts_to_js(ast)?;
+            let js_code: String = format!("\"use strict\";\n{}", transpiled_js_code);
+            /*----------------------------------- Write .js file ----------------------------------------------------------------*/
+            fs::create_dir(&config.project.out_dir).unwrap();
+            // create file and write it!
+            let js_path: String = format!("{}/out.js", config.project.out_dir);
+            fs::File::create_new(&js_path).unwrap();
+            fs::write(js_path, js_code).unwrap();
 
-            // Parse the entry file
-            // TS test variable
-            let ts_code: &str = "let x: number = 42;";
-            let ast: Module = parser::parse_ts(ts_code)?;
-            let js_code: String = transpiler::transpile_ts_to_js(ast)?;
-
-            println!("[info] Successfully Transpiled: {}", js_code);
+            println!("[info] Sucessfully builded project: {}", config.project.name);
         }
         Some(("new", _)) => {
             let mut name_of_project: String = String::new();
             let value_of_toml: String = format!(
                 "[project]\nname = \"{}\"\nentry = \"src/main.ts\"\nout_dir = \"out\"",
-                name_of_project
+                name_of_project.trim()
             );
             // NAME ---------------------------------------------------
             print!("Enter project name: ");
