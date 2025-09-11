@@ -8,7 +8,8 @@ pub fn transpile_ts_to_js(module: Module) -> Result<String> {
     let mut buf = Vec::new();
 
     {
-        let writer: Box<JsWriter<&mut Vec<u8>>> = Box::new(JsWriter::new(cm.clone(), "\n", &mut buf, None));
+        let writer: Box<JsWriter<&mut Vec<u8>>> =
+            Box::new(JsWriter::new(cm.clone(), "\n", &mut buf, None));
         let mut emitter = Emitter {
             cfg: Default::default(),
             comments: None,

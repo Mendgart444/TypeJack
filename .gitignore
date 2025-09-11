@@ -1,3 +1,11 @@
+# cargo files
 target
 Cargo.lock
+
+# ide data
 .idea
+.vscode
+.vs
+
+# test files
+test
