@@ -63,9 +63,8 @@ fn main() -> anyhow::Result<()> {
     match arg.subcommand() {
         Some(("build", _)) => {
             println!(
-                "[{}] {}",
+                "[{}] Building project...",
                 Blue.paint("info"),
-                Blue.paint("Building project...")
             );
 
             // Load configuration
