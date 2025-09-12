@@ -11,6 +11,9 @@ use std::{
     process::exit,
 };
 use swc_ecma_ast::Module;
+use nu_ansi_term::Color::{Red, Blue, Green};
+
+
 // For toml file
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -40,10 +43,11 @@ fn load_config() -> anyhow::Result<Config> {
 }
 
 fn main() -> anyhow::Result<()> {
-    println!("TypeJack TS Framework");
+    println!("{}", Blue.paint("TypeJack TS Framework"));
     // arg parsing
     let arg: ArgMatches = Command::new("typejack")
         // Config and infortmation-----------------------------
+        .color(clap::ColorChoice::Always)
         .version(env!("CARGO_PKG_VERSION"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -58,11 +62,19 @@ fn main() -> anyhow::Result<()> {
     // Handle arguments-----------------------------------
     match arg.subcommand() {
         Some(("build", _)) => {
-            println!("Building project...");
+            println!(
+                "[{}] {}",
+                Blue.paint("info"),
+                Blue.paint("Building project...")
+            );
 
             // Load configuration
             let config: Config = load_config()?;
-            println!("Project Name: {}", config.project.name);
+            println!(
+                "[{}] Project Name: {}",
+                Blue.paint("info"),
+                config.project.name
+            );
             // read source file
             let source_code: String = fs::read_to_string(config.project.entry).expect("[error] no ts file found!");
             // traspile it
@@ -76,45 +88,67 @@ fn main() -> anyhow::Result<()> {
             fs::File::create_new(&js_path).unwrap();
             fs::write(js_path, js_code).unwrap();
 
-            println!("[info] Sucessfully builded project: {}", config.project.name);
+            println!(
+                "[{}] {} {}", 
+                Blue.paint("info"),
+                Green.paint("Sucessfully builded project:"),
+                config.project.name
+            );
         }
         Some(("new", _)) => {
             let mut name_of_project: String = String::new();
-            let value_of_toml: String = format!(
-                "[project]\nname = \"{}\"\nentry = \"src/main.ts\"\nout_dir = \"out\"",
-                name_of_project.trim()
-            );
             // NAME ---------------------------------------------------
             print!("Enter project name: ");
             stdout().flush().unwrap();
             stdin().read_line(&mut name_of_project).unwrap();
             let folder_struct: String = format!("{}/src", name_of_project.trim());
 
+            // toml file
+            let value_of_toml: String = format!(
+                "[project]\nname = \"{}\"\nentry = \"src/main.ts\"\nout_dir = \"out\"",
+                name_of_project.trim()
+            );
+
             // file creation--------------------------------------------
             // creates the folders: name/src
             match fs::create_dir_all(&folder_struct) {
-                Ok(_) => println!("[info] Created dir"),
+                Ok(_) => println!(
+                    "[{}] Created dir",
+                    Blue.paint("info")
+                ),
                 Err(e) => {
-                    // eprintln!("dir create error {}", e); // DEBUG
-                    eprintln!("[error] {}", e);
+                    eprintln!(
+                        "[{}] {e}",
+                        Red.paint("error")
+                    );
                     exit(1);
                 }
             }
             // creates the file name/src/main.ts
             match fs::File::create_new(format!("{}/main.ts", folder_struct)) {
-                Ok(_) => println!("[info] Created source file"),
+                Ok(_) => println!(
+                    "[{}] Created source file",
+                    Blue.paint("info")
+                ),
                 Err(e) => {
-                    // eprintln!("dir create error {}", e); // DEBUG
-                    eprintln!("[error] {}", e);
+                    eprintln!(
+                        "[{}] {e}",
+                        Red.paint("error")
+                    );
                     exit(1);
                 }
             }
             // creates the file name/typejack.toml
             match fs::File::create_new(format!("{}/typejack.toml", name_of_project.trim())) {
-                Ok(_) => println!("[info] Writen typejack.toml file"),
+                Ok(_) => println!(
+                    "[{}] Created configuration file",
+                    Blue.paint("info")
+                ),
                 Err(e) => {
-                    //eprintln!("file create error {}", e); // DEBUG
-                    eprintln!("[error] {}", e);
+                    eprintln!(
+                        "[{}] {e}",
+                        Red.paint("error")
+                    );
                     exit(1);
                 }
             }
@@ -123,7 +157,7 @@ fn main() -> anyhow::Result<()> {
                 format!("{}/typejack.toml", name_of_project.trim()),
                 value_of_toml,
             )
-            .expect("[error] faild to write toml file");
+            .expect(format!("[{}] faild to write toml file", Red.paint("error")).as_str());
         }
         _ => unreachable!(
             "There should not be an error. if there is an error please report on github issues!"
