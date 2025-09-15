@@ -1,8 +1,8 @@
 use anyhow::Result;
+use nu_ansi_term::Color::Red;
 use swc_common::{FileName, SourceMap, sync::Lrc};
 use swc_ecma_ast::Module;
 use swc_ecma_parser::{Parser, StringInput, Syntax, TsSyntax, lexer::Lexer};
-use nu_ansi_term::Color::Red;
 
 pub fn parse_ts(source_code: &str) -> Result<Module> {
     // configurations we need
@@ -24,7 +24,9 @@ pub fn parse_ts(source_code: &str) -> Result<Module> {
 
     let module: Module = parser
         .parse_module()
-        .map_err(|e: swc_ecma_parser::error::Error| anyhow::anyhow!("[{}] {:?}", Red.paint("error"), e))?;
+        .map_err(|e: swc_ecma_parser::error::Error| {
+            anyhow::anyhow!("[{}] {:?}", Red.paint("error"), e)
+        })?;
 
     Ok(module)
 }
