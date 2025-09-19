@@ -11,3 +11,4 @@ Cargo.lock
 test
 test.cmd
 test.ps1
+build.cmd
