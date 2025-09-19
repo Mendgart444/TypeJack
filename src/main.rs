@@ -1,13 +1,12 @@
-mod transpiler_core;
 mod test;
+mod transpiler_core;
 // Imports ---------------------------------------
 use clap::{ArgMatches, Command};
 use nu_ansi_term::Color::{Blue, Green, Red};
 use serde::Deserialize;
 use std::{
-    collections::HashSet,
     env, fs,
-    io::{stdin, stdout, Write},
+    io::{Write, stdin, stdout},
     path::{Path, PathBuf},
     process::exit,
 };
@@ -40,51 +39,6 @@ fn load_config() -> anyhow::Result<Config> {
     Ok(config)
 }
 
-fn transpile_with_deps(entry_path: &Path, visited: &mut HashSet<String>) -> anyhow::Result<String> {
-    let entry_path_string: String = entry_path.to_str().unwrap().to_string();
-
-    if visited.contains(&entry_path_string) {
-        return Ok(String::new());
-    }
-    visited.insert(entry_path_string.clone());
-
-    if entry_path_string.is_empty() {
-        eprintln!(
-            "[{}] Error entry_path is empty",
-            Red.paint("error")
-        );
-        exit(6);
-    }
-
-    if entry_path.ends_with(".js") {
-        eprintln!(
-            "[{}] wrong import syntax. {} does not work! please use .ts as a file extension not .js",
-            Red.paint("error"),
-            &entry_path.to_str().unwrap()
-        );
-        exit(5);
-    }
-
-    let js_code: String = transpiler_core::transpile(&entry_path)?;
-
-    let source_code: String = fs::read_to_string(&entry_path)?;
-    let mut output: String = String::new();
-
-    for line in source_code.lines() {
-        if let Some(_) = line.find("import") {
-            if let Some(from_start) = line.find("from") {
-                let import_path: &str = line[from_start + 4..].trim();
-                let dir: &Path = Path::new(&entry_path).parent().unwrap();
-                let dep_path: std::path::PathBuf = dir.join(import_path);
-                let dep_path_str: &Path = dep_path.as_path();
-                output += &transpile_with_deps(dep_path_str, visited)?;
-            }
-        }
-    }
-    output += &js_code;
-    Ok(output)
-}
-
 fn main() -> anyhow::Result<()> {
     println!("{}", Blue.paint("TypeJack TS Framework"));
     // arg parsing
@@ -115,26 +69,13 @@ fn main() -> anyhow::Result<()> {
                 Blue.paint("info"),
                 config.project.name
             );
-            let mut visited: HashSet<String> = HashSet::new();
+            let path_buf: PathBuf = PathBuf::from(config.project.entry);
+            let path: &Path = path_buf.as_path();
+            let transpiled_js_code: String = transpiler_core::transpile(path)?;
 
-            // create pathbuf
-            let entry_abs_path: PathBuf = fs::canonicalize(&config.project.entry)?;
-            let entry_abs_path_str: &str = entry_abs_path.to_str().unwrap();
-
-            // clean up the path
-            let entry_abs_path: PathBuf = if entry_abs_path_str.starts_with(r#"\\?\"#) {
-                PathBuf::from(&entry_abs_path_str[4..])
-            } else {
-                entry_abs_path
-            };
-
-            let path: &Path = entry_abs_path.as_path();
-
-            // traspile it
-            let transpiled_js_code: String = transpile_with_deps(path, &mut visited)?;
             let js_code: String = format!("\"use strict\";\n{}", transpiled_js_code);
             let js_path: String = format!("{}/out.js", config.project.out_dir);
-            
+
             /*----------------------------------- Write .js file ----------------------------------------------------------------*/
             if fs::exists(format!("{}/out.js", config.project.out_dir))? {
                 fs::remove_file(&js_path)?;

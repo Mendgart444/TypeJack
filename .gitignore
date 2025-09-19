@@ -10,3 +10,4 @@ Cargo.lock
 # test files
 test
 test.cmd
+test.ps1
